@@ -1,0 +1,39 @@
+# Perez Rough Frame Specialist — Expanded Business Context
+
+Perez Rough Frame Specialist is the public-facing brand used by Perez Rough Frame Specialists Corp., a California construction business based in San Pablo. The business serves homeowners, builders, general contractors, developers, property managers, and light-commercial teams across an approximate 35-mile Bay Area radius, depending on project fit and availability.
+
+## Contact and license
+
+- Phone: +1-415-419-4496
+- Email: perez.hp450@gmail.com
+- California contractor license: CSLB #1144949
+- Languages: Spanish and English
+
+## Services
+
+- Wood and metal rough framing
+- Structural walls and roof systems
+- Additions and remodel framing
+- Openings, reframing, and structural modifications
+- Residential and light-commercial framing
+- Coordinated general construction support when the project scope requires multiple trades
+
+## Builder and GC workflow
+
+Builders and general contractors should provide a bid set or plans, project location, requested framing scope, target schedule, bid due date, access information, phases, and project requirements. The company reviews fit, availability, and next steps for each opportunity. Sending plans does not guarantee a bid or contract.
+
+## Homeowner workflow
+
+Homeowners may request a free project review by sharing contact information, project city or ZIP code, project type, desired timing, scope, and optional photographs or plans. The company may schedule a site review before issuing a proposal.
+
+## Experience and company age
+
+The website describes 25+ years of hands-on construction experience. This statement refers to professional experience and should never be restated as 25 years of corporate existence.
+
+## Verification and claims
+
+Current license status and official details should be checked directly with the California Contractors State License Board. Do not infer insurance coverage, bonding protection, pricing, crew size, certifications, guaranteed schedules, guaranteed inspections, or guaranteed financing unless the business publishes current supporting information.
+
+## Integrations
+
+The website is prepared for a Leadprime intake webhook and a Leadprime Embed Kit business assistant. Those two connections remain pending until production endpoints or credentials are supplied. Essential business facts remain public on the website and do not depend on the chat assistant.

@@ -1,0 +1,30 @@
+# Perez Rough Frame Specialist
+
+> Rough and structural framing contractor serving San Pablo and the surrounding Bay Area in English and Spanish.
+
+## Primary pages
+
+- [Website](/): Services, real project photographs, process, contact, and estimate request.
+- [Business profile](/company-profile): Canonical public identity, license, service area, capabilities, and builder bid requirements.
+- [Privacy](/privacy): How estimate-request information is handled.
+
+## Key facts
+
+- Public brand: Perez Rough Frame Specialist
+- Legal entity: Perez Rough Frame Specialists Corp.
+- California contractor license: CSLB #1144949
+- Base: San Pablo, California 94806
+- General service radius: approximately 35 miles, subject to project fit and availability
+- Languages: Spanish and English
+- Phone: +1-415-419-4496
+- Email: perez.hp450@gmail.com
+- Primary work: rough framing, structural framing, additions, remodel framing, residential construction, and light-commercial work
+- Professional experience statement: 25+ years of hands-on construction experience; this is not a claim that the corporation has existed for 25 years
+
+## Important limitations
+
+- Verify current license details directly with CSLB.
+- Service availability, scope, pricing, scheduling, permits, and inspection outcomes are not guaranteed by this website.
+- The Leadprime assistant and estimate webhook are integration-ready but may remain unavailable until their production credentials are configured.
+
+For expanded details, read [/llms-full.txt](/llms-full.txt).
