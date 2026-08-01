@@ -4,9 +4,15 @@ import { business } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Aviso de privacidad",
-  description: "Cómo Perez Rough Frame Specialist maneja solicitudes de estimado y datos de contacto.",
+  description: "Cómo Perez Rough Framing maneja solicitudes de estimado y datos de contacto.",
   robots: { index: true, follow: true },
   alternates: { canonical: "/privacy" },
+  // Without this the page inherits the layout's og:url and shares preview as the homepage.
+  openGraph: {
+    title: "Aviso de privacidad | Perez Rough Framing",
+    description: "Cómo Perez Rough Framing maneja solicitudes de estimado y datos de contacto.",
+    url: "/privacy",
+  },
 };
 
 export default function PrivacyPage() {

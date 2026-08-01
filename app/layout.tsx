@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Perez Rough Frame Specialist | Contratista de framing en el Bay Area",
-    template: "%s | Perez Rough Frame Specialist",
+    default: "Perez Rough Framing | Contratista de framing en el Bay Area",
+    template: "%s | Perez Rough Framing",
   },
   description:
     "Framing estructural residencial y comercial, ampliaciones y renovaciones en San Pablo y el Área de la Bahía. CSLB #1144949. Atención en español e inglés.",
@@ -28,22 +28,22 @@ export const metadata: Metadata = {
     "residential framing",
     "commercial framing",
     "home additions",
-    "Perez Rough Frame Specialist",
+    "Perez Rough Framing",
   ],
   openGraph: {
-    title: "Perez Rough Frame Specialist",
+    title: "Perez Rough Framing",
     description:
       "Framing bien hecho, del plano a la estructura. Servicio en San Pablo y comunidades cercanas del Área de la Bahía.",
     type: "website",
     locale: "es_US",
     alternateLocale: "en_US",
-    siteName: "Perez Rough Frame Specialist",
+    siteName: "Perez Rough Framing",
     url: "/",
     images: ["/assets/project-05.jpg"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Perez Rough Frame Specialist",
+    title: "Perez Rough Framing",
     description: "Framing residencial y comercial en el Área de la Bahía.",
     images: ["/assets/project-05.jpg"],
   },

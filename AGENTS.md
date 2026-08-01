@@ -1,6 +1,6 @@
 # Instructions for AI and coding agents
 
-This repository is the business-controlled source for the Perez Rough Frame Specialist website.
+This repository is the business-controlled source for the Perez Rough Framing website.
 
 ## Product intent
 
@@ -13,27 +13,37 @@ The default language is Spanish. English remains available through the existing 
 
 ## Canonical business facts
 
-- Public brand: Perez Rough Frame Specialist
-- Legal entity: Perez Rough Frame Specialists Corp.
-- CSLB license: #1144949
+- Public brand: Perez Rough Framing. This is the only name. No "Specialist" variant, no corporate suffix.
+- Legal entity: PENDING CONFIRMATION from the owner. Nothing renders it. Do not publish a guess anywhere, including JSON-LD.
+- CSLB license: #1144949 — Class B, General Building Contractor
+- Insurance: general liability and workers' compensation in force (confirmed by the owner). Publish that coverage exists; never publish policy numbers, limits, or renewal dates.
+- Certifications: commercial, government, and residential work
+- Crew: 11 people on payroll
+- License and corporation age: 3 years
 - Base: San Pablo, CA 94806
 - General service radius: approximately 35 miles, subject to project fit
 - Phone: (415) 419-4496
 - Email: perez.hp450@gmail.com
 - Languages: Spanish and English
-- Experience statement: 25+ years of hands-on construction experience. Never convert this into a claim that the corporation has existed for 25 years.
+- Experience statement: 25+ years of hands-on construction experience. This belongs to the owner, not the company.
+- Estimates: free, in person, weekends only, scheduled 2 to 5 days ahead
+- Pricing: in person only. No channel publishes prices, ranges, square-foot rates, or minimums
 
 Read `docs/BUSINESS_SOURCE_OF_TRUTH.md` before changing services, identity, contact information, claims, metadata, structured data, or AI-facing files. Keep the homepage, `/company-profile`, JSON-LD, metadata, `llms.txt`, and `llms-full.txt` consistent.
 
 ## Claims guardrail
 
+Insurance coverage, certifications, and crew size were confirmed by the owner and are published as facts only — coverage exists, 11 on payroll, certified for commercial/government/residential. Do not extend them into limits, policy numbers, renewal dates, bonding, or guaranteed availability.
+
 Do not publish or infer any of the following without current documentary support supplied by the business:
 
-- “bonded and insured” or insurance limits
-- crew size or guaranteed availability
-- certifications beyond the public license record
+- insurance limits, policy numbers, coverage amounts, renewal dates, or bonding
+- guaranteed crew availability for a given schedule
+- certifications beyond the public license record and the confirmed list above
 - guaranteed permits, inspections, schedules, financing, rankings, leads, contracts, or outcomes
 - testimonials, star ratings, project values, or client names
+- any price, range, square-foot rate, or minimum, on any channel
+- the 25+ years figure attached to the company rather than the owner, or any founding year implying it
 
 When adding project photographs, use only business-owned images and describe only what is visibly supported or confirmed.
 

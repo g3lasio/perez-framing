@@ -1,17 +1,32 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import AssistantChat from "@/components/AssistantChat";
 import Icon, { type IconName } from "@/components/Icon";
-import { business, siteUrl } from "@/lib/site";
+import { business, credentials, serviceCities } from "@/lib/site";
+import { buildBusinessSchema } from "@/lib/structuredData";
 import { captureAttribution, readAttribution } from "@/lib/attribution";
+import {
+  estimateDateBounds,
+  validateEstimateDate,
+  type EstimateDateError,
+} from "@/lib/scheduling";
 
 type Lang = "en" | "es";
 
 const phoneDisplay = business.phoneDisplay;
 const phoneHref = business.phoneE164;
 const email = business.email;
+
+// Kept in step with the limits enforced in app/api/leads/route.ts.
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+const ALLOWED_ATTACHMENT_TYPES = ["application/pdf", "image/jpeg", "image/png"];
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 const content = {
   en: {
@@ -44,6 +59,20 @@ const content = {
       licenseValue: "CSLB #1144949",
       coverageLabel: "Local",
       coverageValue: "35-mile service area",
+    },
+    reviews: {
+      eyebrow: "What clients say",
+      title: "Reviews from completed projects.",
+      // Populated only from real, attributable reviews. The section stays hidden
+      // while this list is empty — no placeholder or sample testimonials.
+      items: [] as readonly { quote: string; name: string; project: string }[],
+    },
+    trust: {
+      eyebrow: "Licensed, insured, and staffed",
+      title: "The credentials a general contractor checks first.",
+      body: "Everything below is current. Certificates of insurance and workers' compensation go straight to the GC or agency that requests them for a project.",
+      verify: "Verify with CSLB",
+      note: "We publish that coverage is in force. Policy numbers, limits, and renewal dates are shared directly with the party that needs them.",
     },
     intro: {
       eyebrow: "The structure behind the finish",
@@ -97,14 +126,17 @@ const content = {
       title: "A framing partner who answers before the bid is due.",
       body: "Send the bid set, project location, target schedule, and framing scope. We review fit, availability, and next steps without wasting your estimating window.",
       items: [
+        "11-person crew on our own payroll",
+        "General liability and workers' compensation in force",
+        "Eligible for commercial and government work",
         "Wood and metal framing scopes",
         "Plan and takeoff review",
-        "Crew availability by project",
         "Residential and light-commercial work",
       ],
       primary: "Send a bid set",
       secondary: "Call about availability",
       note: "For builders, GCs, developers, and property teams in the Bay Area.",
+      subject: "Perez Rough Framing — bid set for review",
     },
     work: {
       eyebrow: "Selected work",
@@ -190,7 +222,7 @@ const content = {
       eyebrow: "Built on experience",
       title: "Hands-on craftsmanship. Honest communication.",
       bodyA:
-        "Perez Rough Frame Specialist brings more than 25 years of construction experience to residential and commercial projects across the Bay Area.",
+        "More than 25 years of hands-on construction experience stand behind the residential and commercial projects we take on across the Bay Area.",
       bodyB:
         "We believe the strongest client relationships are built the same way as a strong frame: with accuracy, consistency, and nothing hidden.",
       quote:
@@ -214,11 +246,19 @@ const content = {
         },
         {
           q: "Do you provide free estimates?",
-          a: "Yes. We offer free project estimates and can review photos, plans, and key details before scheduling a site visit.",
+          a: "Yes. Estimates are free and done in person. We schedule them on weekends, 2 to 5 days ahead, because our crew is on site during the week. Send photos, plans, and key details first and we will come prepared.",
         },
         {
           q: "What areas do you serve?",
-          a: "We are based in San Pablo, California and generally serve projects within a 35-mile radius across the surrounding Bay Area.",
+          a: "We are based in San Pablo, California and generally serve projects within a 35-mile radius across the surrounding Bay Area, including Richmond, El Cerrito, Berkeley, Oakland, Albany, Pinole, Hercules, Vallejo, Martinez, Concord, Walnut Creek, San Rafael, Alameda, and San Leandro.",
+        },
+        {
+          q: "Are you licensed and insured?",
+          a: "Yes. CSLB license #1144949, Class B General Building Contractor, with general liability insurance and workers' compensation in force. We are certified for commercial, government, and residential work, and we send certificates directly to the general contractor or agency that requests them.",
+        },
+        {
+          q: "How do you handle pricing?",
+          a: "Pricing is given in person, after we have seen the site and the scope. We do not publish prices, ranges, square-foot rates, or minimums anywhere, and our site assistant does not quote either.",
         },
         {
           q: "Can you help beyond framing?",
@@ -238,7 +278,7 @@ const content = {
       callAction: `Call ${phoneDisplay}`,
       textAction: "Send a text",
       emailAction: "Send an email",
-      hours: "Response time depends on current project availability",
+      hours: "Estimates are held on weekends and booked 2 to 5 days ahead — during the week our crew is on site building.",
       form: {
         name: "Full name",
         phone: "Phone number",
@@ -266,9 +306,18 @@ const content = {
         message: "Tell us about the project",
         messagePlaceholder:
           "Scope, approximate size, plans available, and anything else we should know…",
-        photos: "Have photos or plans?",
-        photosHint:
-          "Send them to us directly and we'll review them with your request. PDF, JPG, or PNG.",
+        preferredDate: "Preferred estimate day",
+        preferredDateHint:
+          "Weekends only, at least 2 days out. Leave it blank and we'll propose a day.",
+        preferredDateWeekday: "Estimates are held on Saturdays and Sundays. Please choose a weekend day.",
+        preferredDateTooSoon: "Please choose a day at least 2 days from now so we can schedule the visit.",
+        preferredDateInvalid: "Please choose a valid date.",
+        photos: "Photos or plans",
+        photosHint: "PDF, JPG or PNG • up to 10 MB each",
+        photosTooLarge: "Each file must be 10 MB or smaller. Please choose smaller files.",
+        photosWrongType: "Only PDF, JPG, and PNG files can be attached.",
+        photosNote:
+          "Attachments help us prepare, and you can also send them by email or text.",
         photosEmail: "Email the files",
         photosText: "Text the files",
         photosSubject: "Photos and plans for my framing project",
@@ -357,6 +406,20 @@ const content = {
       coverageLabel: "Local",
       coverageValue: "Cobertura de 35 millas",
     },
+    reviews: {
+      eyebrow: "Lo que dicen los clientes",
+      title: "Reseñas de proyectos terminados.",
+      // Solo se llena con reseñas reales y atribuibles. La sección permanece
+      // oculta mientras esta lista esté vacía: nada de testimonios de relleno.
+      items: [] as readonly { quote: string; name: string; project: string }[],
+    },
+    trust: {
+      eyebrow: "Con licencia, seguro y equipo propio",
+      title: "Las credenciales que un contratista general revisa primero.",
+      body: "Todo lo siguiente está vigente. Los certificados de seguro y workers’ compensation se envían directamente al GC o a la agencia que los solicite para un proyecto.",
+      verify: "Verificar en CSLB",
+      note: "Publicamos que la cobertura está vigente. Los números de póliza, montos y fechas de renovación se comparten directamente con quien los necesita.",
+    },
     intro: {
       eyebrow: "La estructura detrás del acabado",
       title: "Tu proyecto merece más que una promesa general.",
@@ -409,14 +472,17 @@ const content = {
       title: "Un equipo de framing que responde antes de que cierre la licitación.",
       body: "Envíanos los planos, la ubicación, el calendario objetivo y el alcance de framing. Revisamos compatibilidad, disponibilidad y próximos pasos sin hacerte perder tiempo de estimación.",
       items: [
+        "Cuadrilla propia de 11 personas en nómina",
+        "Seguro de responsabilidad civil y workers’ compensation vigentes",
+        "Elegibles para trabajo comercial y gubernamental",
         "Alcances de framing en madera y metal",
         "Revisión de planos y takeoffs",
-        "Disponibilidad de equipo por proyecto",
         "Trabajo residencial y comercial ligero",
       ],
       primary: "Enviar planos para cotizar",
       secondary: "Llamar por disponibilidad",
       note: "Para builders, GCs, desarrolladores y equipos de propiedades en el Área de la Bahía.",
+      subject: "Perez Rough Framing — bid set para revisión",
     },
     work: {
       eyebrow: "Trabajos seleccionados",
@@ -502,7 +568,7 @@ const content = {
       eyebrow: "Construido con experiencia",
       title: "Trabajo práctico. Comunicación honesta.",
       bodyA:
-        "Perez Rough Frame Specialist aporta más de 25 años de experiencia en construcción a proyectos residenciales y comerciales del Área de la Bahía.",
+        "Más de 25 años de experiencia práctica en construcción respaldan los proyectos residenciales y comerciales que tomamos en el Área de la Bahía.",
       bodyB:
         "Creemos que las mejores relaciones con nuestros clientes se construyen igual que un buen frame: con precisión, consistencia y nada oculto.",
       quote:
@@ -526,11 +592,19 @@ const content = {
         },
         {
           q: "¿Ofrecen estimados gratis?",
-          a: "Sí. Ofrecemos estimados gratuitos y podemos revisar fotos, planos y detalles importantes antes de programar una visita.",
+          a: "Sí. Los estimados son gratuitos y se hacen en persona. Los agendamos en fin de semana, con 2 a 5 días de anticipación, porque entre semana el equipo está en obra. Manda fotos, planos y los detalles importantes y llegamos preparados.",
         },
         {
           q: "¿Qué ciudades atienden?",
-          a: "Estamos en San Pablo, California y generalmente atendemos proyectos dentro de un radio de 35 millas en el Área de la Bahía.",
+          a: "Estamos en San Pablo, California y generalmente atendemos proyectos dentro de un radio de 35 millas en el Área de la Bahía, incluyendo Richmond, El Cerrito, Berkeley, Oakland, Albany, Pinole, Hercules, Vallejo, Martinez, Concord, Walnut Creek, San Rafael, Alameda y San Leandro.",
+        },
+        {
+          q: "¿Tienen licencia y seguro?",
+          a: "Sí. Licencia CSLB #1144949, Clase B General Building Contractor, con seguro de responsabilidad civil y workers’ compensation vigentes. Estamos certificados para trabajo comercial, gubernamental y residencial, y enviamos los certificados directamente al contratista general o a la agencia que los solicite.",
+        },
+        {
+          q: "¿Cómo manejan los precios?",
+          a: "Los precios se dan en persona, después de revisar el sitio y el alcance. No publicamos precios, rangos, tarifas por pie cuadrado ni mínimos en ningún lado, y el asistente del sitio tampoco cotiza.",
         },
         {
           q: "¿Pueden ayudar con algo más que framing?",
@@ -550,7 +624,7 @@ const content = {
       callAction: `Llama al ${phoneDisplay}`,
       textAction: "Mandar texto",
       emailAction: "Enviar email",
-      hours: "El tiempo de respuesta depende de la disponibilidad de proyectos",
+      hours: "Los estimados se hacen en fin de semana y se agendan con 2 a 5 días de anticipación — entre semana el equipo está en obra.",
       form: {
         name: "Nombre completo",
         phone: "Número de teléfono",
@@ -578,9 +652,18 @@ const content = {
         message: "Platícanos sobre el proyecto",
         messagePlaceholder:
           "Alcance, medidas aproximadas, si tienes planos y cualquier otro detalle…",
-        photos: "¿Tienes fotos o planos?",
-        photosHint:
-          "Envíalos directamente y los revisamos junto con tu solicitud. PDF, JPG o PNG.",
+        preferredDate: "Día preferido para el estimado",
+        preferredDateHint:
+          "Solo fines de semana, con al menos 2 días de anticipación. Si lo dejas vacío, te proponemos un día.",
+        preferredDateWeekday: "Los estimados se hacen sábado y domingo. Elige un día de fin de semana.",
+        preferredDateTooSoon: "Elige un día con al menos 2 días de anticipación para poder agendar la visita.",
+        preferredDateInvalid: "Elige una fecha válida.",
+        photos: "Fotos o planos",
+        photosHint: "PDF, JPG o PNG • hasta 10 MB por archivo",
+        photosTooLarge: "Cada archivo debe pesar 10 MB o menos. Elige archivos más pequeños.",
+        photosWrongType: "Solo se pueden adjuntar archivos PDF, JPG y PNG.",
+        photosNote:
+          "Los archivos nos ayudan a prepararnos, y también puedes enviarlos por email o texto.",
         photosEmail: "Enviar por email",
         photosText: "Enviar por texto",
         photosSubject: "Fotos y planos para mi proyecto de framing",
@@ -675,11 +758,28 @@ export default function Home() {
   const [lang, setLang] = useState<Lang>("es");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachmentError, setAttachmentError] = useState<"size" | "type" | null>(null);
+  const [preferredDate, setPreferredDate] = useState("");
+  const [dateError, setDateError] = useState<EstimateDateError | null>(null);
   const [comparePosition, setComparePosition] = useState(52);
   const [formStatus, setFormStatus] = useState<
     "idle" | "sending" | "pending" | "success" | "error"
   >("idle");
   const t = content[lang];
+  // Bounds are computed once per render pass rather than at module load, so a tab
+  // left open overnight still offers valid days.
+  const dateBounds = estimateDateBounds();
+  const dateMessage =
+    dateError === "weekday"
+      ? t.estimate.form.preferredDateWeekday
+      : dateError === "too-soon"
+        ? t.estimate.form.preferredDateTooSoon
+        : t.estimate.form.preferredDateInvalid;
+  const attachmentMessage =
+    attachmentError === "size"
+      ? t.estimate.form.photosTooLarge
+      : t.estimate.form.photosWrongType;
 
   useEffect(() => {
     const savedLanguage = window.localStorage.getItem("rfs-language");
@@ -713,55 +813,7 @@ export default function Home() {
     };
   }, [selectedProject]);
 
-  const schema = useMemo(
-    () => ({
-      "@context": "https://schema.org",
-      "@type": "GeneralContractor",
-      name: business.publicName,
-      legalName: business.legalName,
-      url: siteUrl,
-      image: `${siteUrl}/assets/logo.png`,
-      telephone: phoneHref,
-      email,
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: business.city,
-        addressRegion: business.state,
-        postalCode: business.postalCode,
-        addressCountry: "US",
-      },
-      areaServed: {
-        "@type": "GeoCircle",
-        geoMidpoint: {
-          "@type": "GeoCoordinates",
-          latitude: 37.9621,
-          longitude: -122.3455,
-        },
-        geoRadius: "56327",
-      },
-      knowsLanguage: ["English", "Spanish"],
-      identifier: {
-        "@type": "PropertyValue",
-        name: "California contractor license",
-        value: business.license,
-      },
-      hasCredential: {
-        "@type": "EducationalOccupationalCredential",
-        credentialCategory: "California contractor license",
-        recognizedBy: {
-          "@type": "GovernmentOrganization",
-          name: "Contractors State License Board",
-          url: "https://www.cslb.ca.gov/",
-        },
-      },
-      sameAs: [
-        "https://www.cslb.ca.gov/OnlineServices/CheckLicenseII/LicenseDetail.aspx?LicNum=1144949",
-      ],
-      description:
-        "Residential and commercial rough framing, structural framing, additions, remodeling, and construction services in San Pablo and the surrounding Bay Area.",
-    }),
-    [],
-  );
+  const schema = useMemo(() => buildBusinessSchema(), []);
 
   function changeLanguage(next: Lang) {
     setLang(next);
@@ -769,10 +821,42 @@ export default function Home() {
     setMobileMenuOpen(false);
   }
 
+  function handleDateChange(value: string) {
+    setPreferredDate(value);
+    setDateError(validateEstimateDate(value));
+  }
+
+  function handleAttachmentChange(event: ChangeEvent<HTMLInputElement>) {
+    const picked = Array.from(event.target.files ?? []);
+
+    // Reject here as well as on the server, so a visitor learns about a 12 MB photo
+    // before waiting on an upload that was always going to be refused.
+    const tooLarge = picked.some((file) => file.size > MAX_ATTACHMENT_BYTES);
+    const wrongType = picked.some((file) => !ALLOWED_ATTACHMENT_TYPES.includes(file.type));
+
+    if (tooLarge || wrongType) {
+      event.target.value = "";
+      setAttachments([]);
+      setAttachmentError(tooLarge ? "size" : "type");
+      return;
+    }
+
+    setAttachmentError(null);
+    setAttachments(picked);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     if (!form.reportValidity()) return;
+
+    const dateProblem = validateEstimateDate(preferredDate);
+    if (dateProblem) {
+      setDateError(dateProblem);
+      form.querySelector<HTMLInputElement>('input[name="preferred_date"]')?.focus();
+      return;
+    }
+    if (attachmentError) return;
 
     const body = new FormData(form);
     for (const [field, value] of Object.entries(readAttribution())) {
@@ -792,6 +876,10 @@ export default function Home() {
       if (!response.ok) throw new Error("Lead request failed");
       setFormStatus("success");
       form.reset();
+      setAttachments([]);
+      setAttachmentError(null);
+      setPreferredDate("");
+      setDateError(null);
     } catch {
       setFormStatus("error");
     }
@@ -841,11 +929,11 @@ export default function Home() {
 
         <header className="site-header">
           <div className="container header-inner">
-            <a className="brand" href="#main" aria-label="Perez Rough Frame Specialist home">
+            <a className="brand" href="#main" aria-label="Perez Rough Framing home">
               <Image src="/assets/logo.png" alt="" width={72} height={72} />
               <span>
                 <strong>PEREZ</strong>
-                <small>ROUGH FRAME SPECIALIST</small>
+                <small>ROUGH FRAMING</small>
               </span>
             </a>
 
@@ -981,6 +1069,40 @@ export default function Home() {
             </div>
           </section>
 
+          <section className="credentials section" id="credentials">
+            <div className="container">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">{t.trust.eyebrow}</p>
+                  <h2 className="section-title">{t.trust.title}</h2>
+                </div>
+                <p>{t.trust.body}</p>
+              </div>
+
+              <ul className="credential-grid">
+                {credentials[lang].map((item) => (
+                  <li key={item.key}>
+                    <span className="credential-check">
+                      <Icon name="shield" size={20} />
+                    </span>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <p>{item.body}</p>
+                      {"verify" in item && item.verify ? (
+                        <a href={business.cslbVerifyUrl} target="_blank" rel="noreferrer">
+                          {item.verify}
+                          <Icon name="arrow" size={15} />
+                        </a>
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              <p className="credential-note">{t.trust.note}</p>
+            </div>
+          </section>
+
           <section className="intro section">
             <div className="container intro-grid">
               <div>
@@ -1052,7 +1174,7 @@ export default function Home() {
                 <div className="builders-actions">
                   <a
                     className="button button-copper"
-                    href={`mailto:${email}?subject=${encodeURIComponent("Framing bid set / Planos para cotizar")}`}
+                    href={`mailto:${email}?subject=${encodeURIComponent(t.builders.subject)}`}
                   >
                     {t.builders.primary}
                     <Icon name="arrow" size={19} />
@@ -1241,6 +1363,11 @@ export default function Home() {
                     <div>
                       <h3>{t.about.areaTitle}</h3>
                       <p>{t.about.areaBody}</p>
+                      <ul className="service-cities">
+                        {serviceCities.map((city) => (
+                          <li key={city}>{city}</li>
+                        ))}
+                      </ul>
                       <a
                         href="https://www.google.com/maps/search/?api=1&query=San+Pablo+CA+94806"
                         target="_blank"
@@ -1255,6 +1382,30 @@ export default function Home() {
               </div>
             </div>
           </section>
+
+          {t.reviews.items.length > 0 && (
+            <section className="reviews section" id="reviews">
+              <div className="container">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">{t.reviews.eyebrow}</p>
+                    <h2 className="section-title">{t.reviews.title}</h2>
+                  </div>
+                </div>
+                <div className="review-grid">
+                  {t.reviews.items.map((review) => (
+                    <figure className="review-card" key={`${review.name}-${review.project}`}>
+                      <blockquote>{review.quote}</blockquote>
+                      <figcaption>
+                        <strong>{review.name}</strong>
+                        <small>{review.project}</small>
+                      </figcaption>
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
 
           <section className="faq section">
             <div className="container faq-grid">
@@ -1389,13 +1540,64 @@ export default function Home() {
                   />
                 </label>
 
-                <div className="plans-field">
-                  <span className="plans-icon">
+                <label className="date-field">
+                  <span>{t.estimate.form.preferredDate}</span>
+                  <input
+                    name="preferred_date"
+                    type="date"
+                    value={preferredDate}
+                    min={dateBounds.min}
+                    max={dateBounds.max}
+                    aria-describedby="preferred-date-hint"
+                    aria-invalid={dateError ? true : undefined}
+                    onChange={(event) => handleDateChange(event.target.value)}
+                  />
+                  <small id="preferred-date-hint">{t.estimate.form.preferredDateHint}</small>
+                  {dateError && (
+                    <small className="field-error" role="alert">
+                      {dateMessage}
+                    </small>
+                  )}
+                </label>
+
+                <label className="upload-field">
+                  <input
+                    name="attachments"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                    multiple
+                    onChange={handleAttachmentChange}
+                  />
+                  <span className="upload-icon">
                     <Icon name="upload" size={24} />
                   </span>
-                  <span className="plans-copy">
+                  <span className="upload-copy">
                     <strong>{t.estimate.form.photos}</strong>
                     <small>{t.estimate.form.photosHint}</small>
+                  </span>
+                </label>
+
+                {attachmentError && (
+                  <p className="field-error upload-error" role="alert">
+                    {attachmentMessage}
+                  </p>
+                )}
+
+                {attachments.length > 0 && (
+                  <ul className="upload-list">
+                    {attachments.map((file) => (
+                      <li key={`${file.name}-${file.size}-${file.lastModified}`}>
+                        <Icon name="check" size={14} strokeWidth={2.4} />
+                        <span>{file.name}</span>
+                        <small>{formatFileSize(file.size)}</small>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className="plans-field">
+                  <span className="plans-copy">
+                    <small>{t.estimate.form.photosNote}</small>
                     <span className="plans-actions">
                       <a href={`mailto:${email}?subject=${encodeURIComponent(t.estimate.form.photosSubject)}`}>
                         {t.estimate.form.photosEmail}
@@ -1444,7 +1646,7 @@ export default function Home() {
               <Image src="/assets/logo.png" alt="" width={104} height={104} />
               <div>
                 <strong>PEREZ</strong>
-                <span>ROUGH FRAME SPECIALIST</span>
+                <span>ROUGH FRAMING</span>
                 <p>{t.footer.body}</p>
               </div>
             </div>
@@ -1466,7 +1668,7 @@ export default function Home() {
             </div>
           </div>
           <div className="container footer-bottom">
-            <span>© {new Date().getFullYear()} Perez Rough Frame Specialist. {t.footer.rights}</span>
+            <span>© {new Date().getFullYear()} Perez Rough Framing. {t.footer.rights}</span>
             <span>{t.footer.ownership}</span>
           </div>
         </footer>

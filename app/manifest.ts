@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Perez Rough Frame Specialist",
+    name: "Perez Rough Framing",
     short_name: "Perez Framing",
     description: "Bay Area rough and structural framing contractor.",
     start_url: "/",

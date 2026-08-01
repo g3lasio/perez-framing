@@ -101,10 +101,19 @@ export function buildLeadPayload(form: FormData, attachments: LeadAttachment[] =
   const lines: string[] = [];
   if (details) lines.push(details);
 
+  const preferredDate = text(form, "preferred_date", 20);
+
   const facts: string[] = [];
   if (location) facts.push(spanish ? `Ubicación: ${location}` : `Location: ${location}`);
   if (projectType) facts.push(spanish ? `Tipo de proyecto: ${projectType}` : `Project type: ${projectType}`);
   if (timeline) facts.push(spanish ? `Cuándo desea comenzar: ${timeline}` : `Desired start: ${timeline}`);
+  if (preferredDate) {
+    facts.push(
+      spanish
+        ? `Día preferido para el estimado: ${preferredDate} (fin de semana)`
+        : `Preferred estimate day: ${preferredDate} (weekend)`,
+    );
+  }
   facts.push(spanish ? "Idioma preferido: Español" : "Preferred language: English");
   facts.push(
     spanish

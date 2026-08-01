@@ -1,4 +1,5 @@
 import { buildLeadPayload, forwardLead, resolveWebhookUrl, type LeadAttachment } from "@/lib/leadprime";
+import { validateEstimateDate } from "@/lib/scheduling";
 
 const MAX_REQUEST_BYTES = 35 * 1024 * 1024;
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
@@ -52,6 +53,13 @@ export async function POST(request: Request) {
 
     if (String(payload.get("contact_consent")) !== "yes") {
       return Response.json({ ok: false, code: "CONTACT_CONSENT_REQUIRED" }, { status: 400 });
+    }
+
+    // Estimate visits are weekends only, booked a few days out. Enforced here too so
+    // a request that skips the browser cannot put an unworkable day on the calendar.
+    const requestedDate = String(payload.get("preferred_date") ?? "").trim();
+    if (validateEstimateDate(requestedDate)) {
+      return Response.json({ ok: false, code: "ESTIMATE_DATE_NOT_AVAILABLE" }, { status: 400 });
     }
 
     const files = payload

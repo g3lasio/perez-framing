@@ -1,6 +1,6 @@
-# Perez Rough Frame Specialist
+# Perez Rough Framing
 
-Production-ready bilingual website for Perez Rough Frame Specialist. Built with Next.js App Router and prepared for Railway.
+Production-ready bilingual website for Perez Rough Framing. Built with Next.js App Router and prepared for Railway.
 
 ## What is complete
 
