@@ -15,11 +15,25 @@ Add:
 
 ```text
 NEXT_PUBLIC_SITE_URL=https://your-final-domain.com
-LEADPRIME_WEBHOOK_URL=
-NEXT_PUBLIC_LEADPRIME_CHAT_URL=
+LEADPRIME_WEBHOOK_URL=https://leadprime.chyrris.com/api/leads/webhook/<key>
 ```
 
-The site works before the two Leadprime values are connected. The form will explicitly report that online delivery is pending; the chat remains marked as coming soon.
+`LEADPRIME_WEBHOOK_URL` is required for the estimate form to deliver leads. It is
+deliberately not in the repository: this repo is public and the webhook is an
+unauthenticated intake endpoint, so anyone holding the key could create leads in
+the account. Keep it in Railway only. `LEADPRIME_WEBHOOK_KEY` works as an
+alternative if you prefer to store just the key.
+
+Without it the site still runs, and the form explicitly reports that the request
+was not sent and offers phone and text contact instead of a false success.
+
+The assistant needs no variables — it falls back to the account's published Embed
+Kit token. Override it with `NEXT_PUBLIC_LEADPRIME_WIDGET_TOKEN` after rotating
+the token in Leadprime. `NEXT_PUBLIC_*` values are inlined at build time, so
+changing one requires a redeploy.
+
+See [LEADPRIME_INTEGRATION.md](LEADPRIME_INTEGRATION.md) for the full list,
+including optional HMAC signing.
 
 ## Domain and indexing
 
@@ -39,5 +53,10 @@ Do not request indexing while the site is private, while the final domain is unk
 - Call, text, and email links use the approved business contact.
 - Mobile navigation and bottom contact bar work.
 - Project images, lightbox, before/after control, and FAQ work.
-- Estimate form shows the pending state until the webhook is configured.
-- No secrets appear in page source or browser network requests.
+- Estimate form delivers a test lead into Leadprime; confirm it appears in the
+  account, then delete it. Without `LEADPRIME_WEBHOOK_URL` the form shows the
+  pending state instead.
+- The assistant opens, greets in the site's current language, and answers.
+- The webhook URL does not appear in page source or browser network requests.
+  The `lp_wid_…` widget token does appear — that one is public by design.
+- The widget token's domain allow-list in Leadprime names the production domain.

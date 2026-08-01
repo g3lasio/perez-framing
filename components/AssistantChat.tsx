@@ -1,0 +1,308 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import Icon from "@/components/Icon";
+import { widgetApi, widgetToken, type ChatReply, type WidgetConfig } from "@/lib/leadprimeWidget";
+
+export type AssistantCopy = {
+  label: string;
+  title: string;
+  status: string;
+  trigger: string;
+  intro: string;
+  chips: readonly string[];
+  placeholder: string;
+  send: string;
+  close: string;
+  open: string;
+  error: string;
+  busy: string;
+  disclaimer: string;
+  callAction: string;
+  textAction: string;
+  powered: string;
+};
+
+type Message = {
+  id: number;
+  role: "bot" | "user";
+  text: string;
+};
+
+/**
+ * Business assistant panel backed by the Leadprime Embed Kit.
+ *
+ * It speaks to the same public widget endpoints as Leadprime's own `embed.js`
+ * (`/api/widget/config` and `/api/widget/chat`) instead of injecting that script,
+ * so the assistant keeps the account's identity and knowledge base while staying
+ * inside this site's interface, its Spanish/English toggle, and its focus and
+ * keyboard behavior. Answers come from the business's Leadprime agent only —
+ * there is no local fallback bot.
+ */
+export default function AssistantChat({
+  lang,
+  copy,
+  phoneHref,
+}: {
+  lang: "en" | "es";
+  copy: AssistantCopy;
+  phoneHref: string;
+}) {
+  // `widgetToken` is a build-time constant, so an unconfigured deployment resolves
+  // to "unavailable" before the first render rather than through an effect.
+  const [available, setAvailable] = useState<boolean | null>(widgetToken ? null : false);
+  const [config, setConfig] = useState<WidgetConfig>({});
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const sessionRef = useRef<string | null>(null);
+  const leadRef = useRef<string | null>(null);
+  const messageId = useRef(0);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+
+  // Ask Leadprime for the owner-managed branding up front. A 401/403 means the
+  // token was disabled or this domain is not on its allow-list — in that case the
+  // assistant is hidden rather than shown in a state where it cannot answer.
+  useEffect(() => {
+    if (!widgetToken) return;
+
+    const controller = new AbortController();
+
+    fetch(`${widgetApi.config}?token=${encodeURIComponent(widgetToken)}`, {
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (response.status === 401 || response.status === 403) {
+          setAvailable(false);
+          return;
+        }
+        if (response.ok) {
+          const data = (await response.json()) as WidgetConfig;
+          setConfig(data ?? {});
+        }
+        setAvailable(true);
+      })
+      .catch(() => {
+        // A transient network failure should not permanently hide the assistant.
+        if (!controller.signal.aborted) setAvailable(true);
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  // Closing always hands focus back to the trigger, whichever way the panel was
+  // dismissed — otherwise keyboard users are dropped at the top of the document.
+  // The trigger stays mounted while the panel is open, so this can run before the
+  // panel unmounts rather than racing a timer against React's commit.
+  const closePanel = useCallback(() => {
+    triggerRef.current?.focus();
+    setOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closePanel();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, closePanel]);
+
+  useEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [messages, sending]);
+
+  const push = useCallback((role: Message["role"], text: string) => {
+    messageId.current += 1;
+    setMessages((current) => [...current, { id: messageId.current, role, text }]);
+  }, []);
+
+  const send = useCallback(
+    async (raw: string) => {
+      const text = raw.trim();
+      if (!text || sending) return;
+
+      if (!sessionRef.current) {
+        sessionRef.current = `ws_${Math.random().toString(36).slice(2, 14)}`;
+      }
+
+      setDraft("");
+      push("user", text);
+      setSending(true);
+
+      try {
+        const response = await fetch(widgetApi.chat, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: widgetToken,
+            message: text,
+            sessionId: sessionRef.current,
+            leadId: leadRef.current,
+            pageUrl: window.location.href,
+            pageTitle: document.title,
+          }),
+        });
+
+        if (response.status === 429) {
+          push("bot", copy.busy);
+          return;
+        }
+
+        if (!response.ok) {
+          push("bot", copy.error);
+          return;
+        }
+
+        const data = (await response.json()) as ChatReply;
+        if (data.leadId) leadRef.current = data.leadId;
+        push("bot", data.reply?.trim() || copy.error);
+      } catch {
+        push("bot", copy.error);
+      } finally {
+        setSending(false);
+      }
+    },
+    [copy.busy, copy.error, push, sending],
+  );
+
+  function openPanel() {
+    setOpen(true);
+    // The greeting is the account's own, falling back to the site's copy only if
+    // Leadprime has none configured.
+    if (messages.length === 0) push("bot", config.greeting?.trim() || copy.intro);
+  }
+
+  function toggle() {
+    if (open) closePanel();
+    else openPanel();
+  }
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  if (available !== true) return null;
+
+  const heading = config.agentName?.trim() || copy.title;
+  const showChips = messages.length <= 1 && !sending;
+
+  return (
+    <div className={`chat-widget${open ? " open" : ""}`}>
+      {open && (
+        <section className="chat-panel" aria-label={copy.label}>
+          <header>
+            <span className="chat-mark">
+              <Icon name="message" size={20} />
+            </span>
+            <div>
+              <small>{copy.label}</small>
+              <strong>{heading}</strong>
+            </div>
+            <button type="button" aria-label={copy.close} onClick={closePanel}>
+              <Icon name="close" size={19} />
+            </button>
+          </header>
+
+          <div className="chat-status">
+            <i />
+            {copy.status}
+          </div>
+
+          <div
+            className="chat-log"
+            ref={listRef}
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions"
+            aria-label={copy.label}
+          >
+            {messages.map((message) => (
+              <p key={message.id} className={`chat-bubble ${message.role}`}>
+                {message.text}
+              </p>
+            ))}
+            {sending && (
+              <p className="chat-bubble bot chat-typing" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </p>
+            )}
+          </div>
+
+          {showChips && (
+            <div className="chat-chips">
+              {copy.chips.map((chip) => (
+                <button key={chip} type="button" onClick={() => void send(chip)}>
+                  {chip}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <form
+            className="chat-input"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void send(draft);
+            }}
+          >
+            <input
+              ref={inputRef}
+              type="text"
+              value={draft}
+              maxLength={500}
+              autoComplete="off"
+              placeholder={copy.placeholder}
+              aria-label={copy.placeholder}
+              onChange={(event) => setDraft(event.target.value)}
+            />
+            <button type="submit" aria-label={copy.send} disabled={sending || !draft.trim()}>
+              <Icon name="send" size={18} />
+            </button>
+          </form>
+
+          <div className="chat-escalate">
+            <a href={`tel:${phoneHref}`}>
+              <Icon name="phone" size={15} />
+              {copy.callAction}
+            </a>
+            <a href={`sms:${phoneHref}`}>
+              <Icon name="message" size={15} />
+              {copy.textAction}
+            </a>
+          </div>
+
+          <p className="chat-disclaimer">
+            {config.requireConsent && config.consentText?.trim()
+              ? config.consentText
+              : copy.disclaimer}
+          </p>
+
+          <div className="chat-powered">
+            <span>{copy.powered}</span>
+            <i />
+            {lang === "es" ? "Conocimiento del negocio" : "Business knowledge"}
+          </div>
+        </section>
+      )}
+
+      <button
+        ref={triggerRef}
+        className="chat-trigger"
+        type="button"
+        aria-label={open ? copy.close : copy.open}
+        aria-expanded={open}
+        onClick={toggle}
+      >
+        <Icon name={open ? "close" : "message"} size={24} />
+        {!open && <span>{copy.trigger}</span>}
+      </button>
+    </div>
+  );
+}

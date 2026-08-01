@@ -25,6 +25,7 @@
 
 - Verify current license details directly with CSLB.
 - Service availability, scope, pricing, scheduling, permits, and inspection outcomes are not guaranteed by this website.
-- The Leadprime assistant and estimate webhook are integration-ready but may remain unavailable until their production credentials are configured.
+- The business assistant answers from the company's own Leadprime knowledge base. It confirms nothing about pricing, scheduling, permits, or availability; those are confirmed by the team directly.
+- Photos and plans are sent by email or text message, not uploaded through the estimate form.
 
 For expanded details, read [/llms-full.txt](/llms-full.txt).

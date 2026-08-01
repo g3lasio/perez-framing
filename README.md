@@ -9,15 +9,21 @@ Production-ready bilingual website for Perez Rough Frame Specialist. Built with 
 - Real project images and business-controlled contact information
 - Public contractor license reference: CSLB #1144949
 - SEO metadata, JSON-LD, `robots.txt`, `sitemap.xml`, web manifest, public business profile, privacy notice, `llms.txt`, and `llms-full.txt`
-- Lead intake API with validation, honeypot protection, attachment-size checks, and a safe pending state
-- Leadprime assistant placeholder that does not pretend the chat is connected
+- Lead intake API with validation, honeypot protection, campaign attribution, delivery retry, and a safe pending state
+- Estimate form wired to the Leadprime lead webhook, including consent capture for A2P 10DLC
+- Business assistant powered by the Leadprime Embed Kit, in Spanish and English
 
-## The only pending production connections
+## Configuration required before launch
 
-1. Set `LEADPRIME_WEBHOOK_URL` to the final Leadprime multipart intake endpoint.
-2. Replace the assistant placeholder with the official Leadprime Embed Kit once its production URL/configuration is provided.
+Set `LEADPRIME_WEBHOOK_URL` (or `LEADPRIME_WEBHOOK_KEY`) in Railway. It is not in
+this repository on purpose — the repo is public and the webhook is unauthenticated,
+so committing the key would let anyone create leads in the account.
 
-See [docs/LEADPRIME_INTEGRATION.md](docs/LEADPRIME_INTEGRATION.md) for the payload and handoff contract.
+Also set the widget token's domain allow-list inside Leadprime to the production
+domain, so the assistant can only run from this site.
+
+See [docs/LEADPRIME_INTEGRATION.md](docs/LEADPRIME_INTEGRATION.md) for the payload
+contract, field mapping, and the known attachment gap.
 
 ## Local development
 

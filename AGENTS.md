@@ -39,12 +39,17 @@ When adding project photographs, use only business-owned images and describe onl
 
 ## Leadprime integration boundary
 
-Only two items are intentionally pending:
+Both connections are wired. Read `docs/LEADPRIME_INTEGRATION.md` before changing either.
 
-1. The contact form posts to `/api/leads`, which forwards multipart form data only when `LEADPRIME_WEBHOOK_URL` exists.
-2. The visible chat panel is a placeholder until the official Leadprime Embed Kit configuration is supplied.
+1. The estimate form posts to `/api/leads`, which normalizes the submission into Leadprime's JSON lead-webhook contract and forwards it. Leadprime's webhook does **not** parse `multipart/form-data`; do not send it multipart.
+2. The chat panel is the Leadprime Embed Kit, called through the public widget endpoints (`/api/widget/config`, `/api/widget/chat`) so it keeps the site's language toggle and visual language.
 
-Do not invent webhook URLs, secrets, agent IDs, account IDs, or chat scripts. Do not silently fall back to a generic assistant. Follow `docs/LEADPRIME_INTEGRATION.md`.
+Rules that still hold:
+
+- The webhook URL/key stays server-side and out of the repository. This repo is public and the endpoint is unauthenticated, so a committed key is a live lead-injection vector. The `lp_wid_…` widget token is different — it is public by design and ships in page source.
+- Do not invent webhook URLs, secrets, agent IDs, or account IDs.
+- Do not add a local fallback bot. If Leadprime rejects the token or is unreachable, the assistant hides itself or points the visitor at phone and text — it never answers on its own.
+- Never show a success state for a submission that was not delivered.
 
 ## Deployment
 

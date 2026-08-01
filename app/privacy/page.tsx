@@ -25,8 +25,10 @@ export default function PrivacyPage() {
           <h2>Información recopilada</h2>
           <p>
             Podemos recibir nombre, teléfono, correo, ubicación del proyecto, tipo de
-            trabajo, calendario, descripción, fotografías, planos y la información que la
-            persona decida compartir.
+            trabajo, calendario, descripción, fotografías, planos, los mensajes escritos en
+            el asistente del sitio y la información que la persona decida compartir.
+            También podemos registrar cómo llegó la persona al sitio (por ejemplo, si vino
+            de un anuncio) para saber qué canales funcionan.
           </p>
         </section>
         <section>
@@ -43,6 +45,17 @@ export default function PrivacyPage() {
             El sitio puede utilizar proveedores de alojamiento, correo, mensajería y
             Leadprime para transmitir y administrar solicitudes. Solo se comparte la
             información necesaria para prestar esos servicios.
+          </p>
+        </section>
+        <section>
+          <h2>Asistente del sitio</h2>
+          <p>
+            El asistente que aparece en el sitio funciona con Leadprime y responde con la
+            información del negocio. Lo que se escribe en esa conversación se procesa en
+            Leadprime y puede quedar guardado junto con la solicitud para dar seguimiento.
+            Sus respuestas se generan automáticamente: el alcance, el precio y el calendario
+            los confirma nuestro equipo. No compartas números de tarjeta, documentos de
+            identidad ni otra información sensible por ese medio.
           </p>
         </section>
         <section>

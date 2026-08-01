@@ -36,4 +36,4 @@ Current license status and official details should be checked directly with the 
 
 ## Integrations
 
-The website is prepared for a Leadprime intake webhook and a Leadprime Embed Kit business assistant. Those two connections remain pending until production endpoints or credentials are supplied. Essential business facts remain public on the website and do not depend on the chat assistant.
+The website sends estimate requests to a Leadprime intake webhook and runs a business assistant through the Leadprime Embed Kit. Assistant answers come from the business's own Leadprime agent and knowledge base; the website does not run a separate general-purpose chatbot. Essential business facts remain public on the website and do not depend on the chat assistant. Photos and plans are sent by email or text rather than uploaded through the form.
