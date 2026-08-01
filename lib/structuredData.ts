@@ -16,8 +16,8 @@ export function buildBusinessSchema() {
     "@id": `${siteUrl}/#business`,
     name: business.publicName,
     url: siteUrl,
-    image: `${siteUrl}/assets/logo.png`,
-    logo: `${siteUrl}/assets/logo.png`,
+    image: `${siteUrl}/assets/logo-mark.png`,
+    logo: `${siteUrl}/assets/logo-mark.png`,
     telephone: business.phoneE164,
     email: business.email,
     numberOfEmployees: {

@@ -3103,3 +3103,37 @@ img {
 .chat-status.offline i {
   background: #b4842f;
 }
+
+/* ── Chat identity mark ──────────────────────────────────────────────────── */
+
+.chat-mark {
+  overflow: hidden;
+  background: var(--white);
+}
+
+.chat-mark img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.chat-trigger-mark {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--white);
+}
+
+.chat-trigger-mark img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.chat-widget.open .chat-trigger .chat-trigger-mark {
+  display: none;
+}

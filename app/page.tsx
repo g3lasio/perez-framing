@@ -936,7 +936,7 @@ export default function Home() {
         <header className="site-header">
           <div className="container header-inner">
             <a className="brand" href="#main" aria-label="Perez Rough Framing home">
-              <Image src="/assets/logo.png" alt="" width={72} height={72} />
+              <Image src="/assets/logo-mark.png" alt="" width={72} height={72} />
               <span>
                 <strong>PEREZ</strong>
                 <small>ROUGH FRAMING</small>
@@ -1649,7 +1649,7 @@ export default function Home() {
         <footer className="footer">
           <div className="container footer-grid">
             <div className="footer-brand">
-              <Image src="/assets/logo.png" alt="" width={104} height={104} />
+              <Image src="/assets/logo-mark.png" alt="" width={104} height={104} />
               <div>
                 <strong>PEREZ</strong>
                 <span>ROUGH FRAMING</span>

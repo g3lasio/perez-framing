@@ -206,6 +206,11 @@ export default function AssistantChat({
   }, [open]);
 
   const heading = config.agentName?.trim() || copy.title;
+  // An avatar set in the Leadprime account wins (that is the Embed Kit contract);
+  // otherwise the business's own mark. Never Leadprime's logo: the visitor is
+  // talking to Perez, and the vendor's brand here only creates confusion.
+  const avatar =
+    config.avatarUrl?.trim() || config.logoUrl?.trim() || "/assets/logo-mark.png";
   // Suggested questions only make sense while the agent can actually answer them.
   const showChips = messages.length <= 1 && !sending && !rejected;
 
@@ -215,7 +220,10 @@ export default function AssistantChat({
         <section className="chat-panel" aria-label={copy.label}>
           <header>
             <span className="chat-mark">
-              <Icon name="message" size={20} />
+              {/* eslint-disable-next-line @next/next/no-img-element -- the avatar
+                  may be an arbitrary remote URL from the Leadprime account, which
+                  next/image would require a remotePatterns entry for. */}
+              <img src={avatar} alt="" width={38} height={38} />
             </span>
             <div>
               <small>{copy.label}</small>
@@ -318,8 +326,17 @@ export default function AssistantChat({
         aria-expanded={open}
         onClick={toggle}
       >
-        <Icon name={open ? "close" : "message"} size={24} />
-        {!open && <span>{copy.trigger}</span>}
+        {open ? (
+          <Icon name="close" size={24} />
+        ) : (
+          <>
+            <span className="chat-trigger-mark">
+              {/* eslint-disable-next-line @next/next/no-img-element -- see above */}
+              <img src={avatar} alt="" width={30} height={30} />
+            </span>
+            <span>{copy.trigger}</span>
+          </>
+        )}
       </button>
     </div>
   );

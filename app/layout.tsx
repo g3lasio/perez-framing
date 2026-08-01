@@ -58,9 +58,9 @@ export const metadata: Metadata = {
     "theme-color": "#101513",
   },
   icons: {
-    icon: "/assets/logo.png",
-    shortcut: "/assets/logo.png",
-    apple: "/assets/logo.png",
+    icon: "/assets/logo-mark.png",
+    shortcut: "/assets/logo-mark.png",
+    apple: "/assets/logo-mark.png",
   },
 };
 

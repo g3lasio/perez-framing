@@ -32,6 +32,10 @@ export type WidgetConfig = {
   agentName?: string;
   businessName?: string;
   greeting?: string;
+  /** Agent avatar set in the Leadprime account. Takes precedence over the site mark. */
+  avatarUrl?: string;
+  /** Business logo set in the Leadprime account. Used when no avatar is set. */
+  logoUrl?: string;
   requireConsent?: boolean;
   consentText?: string;
 };
