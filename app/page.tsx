@@ -3,10 +3,13 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import AssistantChat from "@/components/AssistantChat";
+import FramingAnatomy from "@/components/FramingAnatomy";
 import Icon, { type IconName } from "@/components/Icon";
 import { business, credentials, serviceCities } from "@/lib/site";
 import { buildBusinessSchema } from "@/lib/structuredData";
 import { captureAttribution, readAttribution } from "@/lib/attribution";
+import { cities } from "@/lib/cities";
+import { useScrollReveal } from "@/lib/useScrollReveal";
 import {
   estimateDateBounds,
   validateEstimateDate,
@@ -66,6 +69,29 @@ const content = {
       // Populated only from real, attributable reviews. The section stays hidden
       // while this list is empty — no placeholder or sample testimonials.
       items: [] as readonly { quote: string; name: string; project: string }[],
+    },
+    anatomy: {
+      eyebrow: "What you never get to see",
+      title: "Everything below disappears behind drywall.",
+      body: "Framing is the one trade whose work you cannot inspect once the walls close. So here it is, member by member — tap any piece.",
+      hint: "Tap or hover a piece of the wall",
+      diagramLabel: "Cutaway of a load-bearing wall with a window opening",
+      legendLabel: "Parts of the wall",
+      note: "A general reference for how a load-bearing wall goes together. Every project is sized from its own plans, span and loads — nothing here substitutes for engineering or a permit set.",
+    },
+    compliance: {
+      title: "Compliance package, ready to send",
+      body: "Most GCs cannot issue a subcontract until the paperwork clears. Ours is prepared and goes out on request, usually the same day.",
+      items: [
+        "Certificate of general liability insurance (COI)",
+        "Workers' compensation certificate",
+        "CSLB license verification — #1144949, Class B",
+        "W-9",
+        "Additional insured endorsement, per project on request",
+      ],
+      cta: "Request the compliance package",
+      subject: "Perez Rough Framing — compliance package request",
+      note: "Policy numbers, limits and renewal dates are not published here. They go directly to the general contractor or agency that requests them for a project.",
     },
     trust: {
       eyebrow: "Licensed, insured, and staffed",
@@ -345,6 +371,7 @@ const content = {
       rights: "All rights reserved.",
       ownership: "A business-owned website.",
       profile: "Business profile",
+      areas: "Service areas",
       privacy: "Privacy",
     },
     chat: {
@@ -418,6 +445,29 @@ const content = {
       // Solo se llena con reseñas reales y atribuibles. La sección permanece
       // oculta mientras esta lista esté vacía: nada de testimonios de relleno.
       items: [] as readonly { quote: string; name: string; project: string }[],
+    },
+    anatomy: {
+      eyebrow: "Lo que nunca alcanzas a ver",
+      title: "Todo esto desaparece detrás del drywall.",
+      body: "El framing es el único oficio cuyo trabajo ya no puedes revisar una vez que cierran los muros. Así que aquí está, pieza por pieza — toca cualquiera.",
+      hint: "Toca o pasa el cursor sobre una pieza del muro",
+      diagramLabel: "Corte de un muro de carga con una abertura de ventana",
+      legendLabel: "Partes del muro",
+      note: "Referencia general de cómo se arma un muro de carga. Cada proyecto se dimensiona con sus propios planos, claros y cargas — nada de esto sustituye el cálculo estructural ni el juego de planos del permiso.",
+    },
+    compliance: {
+      title: "Paquete de cumplimiento, listo para enviar",
+      body: "La mayoría de los GCs no puede emitir el subcontrato hasta que el papeleo esté completo. El nuestro ya está preparado y sale cuando lo pidas, normalmente el mismo día.",
+      items: [
+        "Certificado de seguro de responsabilidad civil (COI)",
+        "Certificado de workers\u2019 compensation",
+        "Verificación de licencia CSLB — #1144949, Clase B",
+        "W-9",
+        "Additional insured endorsement, por proyecto a solicitud",
+      ],
+      cta: "Solicitar el paquete de cumplimiento",
+      subject: "Perez Rough Framing — solicitud del paquete de cumplimiento",
+      note: "Los números de póliza, montos y fechas de renovación no se publican aquí. Se envían directamente al contratista general o a la agencia que los solicite para un proyecto.",
     },
     trust: {
       eyebrow: "Con licencia, seguro y equipo propio",
@@ -697,6 +747,7 @@ const content = {
       rights: "Todos los derechos reservados.",
       ownership: "Un sitio propiedad del negocio.",
       profile: "Perfil del negocio",
+      areas: "Zonas de servicio",
       privacy: "Privacidad",
     },
     chat: {
@@ -779,6 +830,7 @@ export default function Home() {
     "idle" | "sending" | "pending" | "success" | "error"
   >("idle");
   const t = content[lang];
+  useScrollReveal();
   // Bounds are computed once per render pass rather than at module load, so a tab
   // left open overnight still offers valid days.
   const dateBounds = estimateDateBounds();
@@ -1137,7 +1189,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="intro section">
+          <section data-reveal className="intro section">
             <div className="container intro-grid">
               <div>
                 <p className="eyebrow">{t.intro.eyebrow}</p>
@@ -1159,7 +1211,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="services section" id="services">
+          <section data-reveal className="services section" id="services">
             <div className="container">
               <div className="section-heading">
                 <div>
@@ -1199,7 +1251,9 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="builders section" id="builders">
+          <FramingAnatomy lang={lang} copy={t.anatomy} />
+
+          <section data-reveal className="builders section" id="builders">
             <div className="container builders-grid">
               <div className="builders-copy">
                 <p className="eyebrow light">{t.builders.eyebrow}</p>
@@ -1221,6 +1275,27 @@ export default function Home() {
                 <small>{t.builders.note}</small>
               </div>
               <div className="builders-panel">
+                <div className="compliance-card">
+                  <h3>{t.compliance.title}</h3>
+                  <p>{t.compliance.body}</p>
+                  <ul>
+                    {t.compliance.items.map((item) => (
+                      <li key={item}>
+                        <Icon name="check" size={14} strokeWidth={2.6} />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <a
+                    className="button button-copper"
+                    href={`mailto:${email}?subject=${encodeURIComponent(t.compliance.subject)}`}
+                  >
+                    {t.compliance.cta}
+                    <Icon name="arrow" size={17} />
+                  </a>
+                  <small>{t.compliance.note}</small>
+                </div>
+
                 <span className="builders-panel-label">BID READY</span>
                 <ul>
                   {t.builders.items.map((item, index) => (
@@ -1234,7 +1309,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="work section" id="work">
+          <section data-reveal className="work section" id="work">
             <div className="container">
               <div className="section-heading work-heading">
                 <div>
@@ -1334,7 +1409,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="process section" id="process">
+          <section data-reveal className="process section" id="process">
             <div className="container">
               <div className="section-heading">
                 <div>
@@ -1357,7 +1432,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="about section" id="about">
+          <section data-reveal className="about section" id="about">
             <div className="container about-grid">
               <div className="about-image-stack">
                 <div className="about-image">
@@ -1441,7 +1516,7 @@ export default function Home() {
             </section>
           )}
 
-          <section className="faq section">
+          <section data-reveal className="faq section">
             <div className="container faq-grid">
               <div className="faq-intro">
                 <p className="eyebrow">{t.faq.eyebrow}</p>
@@ -1467,7 +1542,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="estimate section" id="estimate">
+          <section data-reveal className="estimate section" id="estimate">
             <div className="container estimate-grid">
               <div className="estimate-intro">
                 <p className="eyebrow light">{t.estimate.eyebrow}</p>
@@ -1703,6 +1778,14 @@ export default function Home() {
               <a href="#estimate">{t.nav.estimate}</a>
               <a href="/company-profile">{t.footer.profile}</a>
               <a href="/privacy">{t.footer.privacy}</a>
+            </div>
+            <div>
+              <h2>{t.footer.areas}</h2>
+              {cities.map((city) => (
+                <a key={city.slug} href={`/framing/${city.slug}`}>
+                  {lang === "es" ? `Framing en ${city.name}` : `Framing in ${city.name}`}
+                </a>
+              ))}
             </div>
           </div>
           <div className="container footer-bottom">

@@ -3147,3 +3147,377 @@ img {
   font: inherit;
   text-decoration: underline;
 }
+
+/* ── Framing anatomy: an interactive wall section ─────────────────────────── */
+
+.anatomy {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.anatomy .eyebrow {
+  color: var(--copper);
+}
+
+.anatomy .section-title {
+  color: var(--white);
+}
+
+.anatomy .section-heading > p {
+  color: #a8b2ac;
+}
+
+.anatomy-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
+  gap: 40px;
+  align-items: start;
+  margin-top: 38px;
+}
+
+.anatomy-stage {
+  border: 1px solid #2b3733;
+  border-radius: 4px;
+  background: #0b100e;
+  padding: 18px;
+}
+
+.anatomy-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.fa-grid {
+  pointer-events: none;
+}
+
+.fa-grid line {
+  stroke: #1b2421;
+  stroke-width: 1;
+}
+
+.fa-wood {
+  fill: #d8ab6d;
+  stroke: #8d6533;
+  stroke-width: 1.5;
+}
+
+.fa-beam {
+  fill: #c9955b;
+}
+
+.fa-metal {
+  fill: #8f9a94;
+  stroke: #5d6763;
+  stroke-width: 1.5;
+}
+
+.fa-bolt {
+  fill: #3a4640;
+}
+
+.fa-outline {
+  fill: none;
+  stroke: #7d8f86;
+  stroke-width: 1.5;
+  stroke-dasharray: 7 5;
+}
+
+.fa-void {
+  fill: #0b100e;
+  /* Decorative: the opening must never sit in the hit-test path and swallow a tap
+     meant for the framing around it. */
+  pointer-events: none;
+}
+
+/* Each member fades and settles into place in build order. The section only gets
+   .is-built once it scrolls into view, so the wall assembles as you arrive. */
+.fa-part {
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 460ms ease-out,
+    transform 460ms ease-out,
+    filter 180ms ease-out;
+  transition-delay: calc(var(--step, 0) * 90ms);
+}
+
+.anatomy.is-built .fa-part {
+  opacity: 1;
+  transform: none;
+}
+
+.fa-part:hover,
+.fa-part.is-active {
+  filter: drop-shadow(0 0 10px rgba(201, 120, 56, 0.85));
+}
+
+.fa-part.is-active .fa-wood {
+  fill: var(--copper);
+  stroke: #6d3f1c;
+}
+
+.fa-part.is-active .fa-metal {
+  fill: var(--copper);
+}
+
+.anatomy-hint {
+  margin: 14px 0 0;
+  color: #8b958f;
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+.anatomy-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.anatomy-detail {
+  border-left: 3px solid var(--copper);
+  background: #151d1a;
+  padding: 20px 20px 22px;
+  min-height: 210px;
+}
+
+.anatomy-role {
+  margin: 0;
+  color: var(--copper);
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.anatomy-detail h3 {
+  margin: 9px 0 10px;
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+.anatomy-detail p:last-child {
+  margin: 0;
+  color: #b3bcb7;
+  font-size: 0.83rem;
+  line-height: 1.68;
+}
+
+.anatomy-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.anatomy-legend button {
+  border: 1px solid #33403b;
+  border-radius: 999px;
+  background: none;
+  color: #b3bcb7;
+  cursor: pointer;
+  padding: 7px 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+}
+
+.anatomy-legend button:hover {
+  border-color: var(--copper);
+  color: var(--white);
+}
+
+.anatomy-legend button.is-active {
+  border-color: var(--copper);
+  background: var(--copper);
+  color: var(--white);
+}
+
+.anatomy-note {
+  margin: 26px 0 0;
+  max-width: 68ch;
+  color: #8b958f;
+  font-size: 0.72rem;
+  line-height: 1.65;
+}
+
+@media (max-width: 900px) {
+  .anatomy-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+  }
+
+  .anatomy-detail {
+    min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fa-part {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ── Scroll reveal ───────────────────────────────────────────────────────── */
+
+/* Scoped to .js-reveal so a JavaScript failure can never leave the page blank. */
+.js-reveal [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.js-reveal [data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The hero's measure lines draw themselves like a plan being marked out. */
+.hero-measure-lines span {
+  transform-origin: left center;
+  animation: measure-draw 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-measure-lines span:nth-child(2) {
+  animation-delay: 140ms;
+}
+
+.hero-measure-lines span:nth-child(3) {
+  animation-delay: 280ms;
+}
+
+@keyframes measure-draw {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-reveal [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .hero-measure-lines span {
+    animation: none;
+  }
+}
+
+/* ── City pages + GC compliance card ─────────────────────────────────────── */
+
+.city-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 26px 0 8px;
+}
+
+.city-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.city-tags li {
+  border: 1px solid #ded7cb;
+  border-radius: 999px;
+  color: #59615c;
+  padding: 5px 11px;
+  font-size: 0.68rem;
+}
+
+.city-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.city-links a {
+  color: var(--copper-deep);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.city-links a:hover {
+  color: var(--ink);
+}
+
+.city-radius {
+  margin-top: 18px;
+  color: #656c68;
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+
+.compliance-card {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-left: 3px solid var(--copper);
+  background: rgba(255, 255, 255, 0.05);
+  margin-bottom: 26px;
+  padding: 22px 20px;
+}
+
+.compliance-card h3 {
+  margin: 0 0 8px;
+  color: var(--white);
+  font-size: 1.02rem;
+  line-height: 1.25;
+}
+
+.compliance-card > p {
+  margin: 0 0 15px;
+  color: #b3bcb7;
+  font-size: 0.79rem;
+  line-height: 1.6;
+}
+
+.compliance-card ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.compliance-card li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #d6ddd9;
+  font-size: 0.77rem;
+  line-height: 1.45;
+}
+
+.compliance-card li svg {
+  flex: 0 0 auto;
+  margin-top: 3px;
+  color: var(--copper);
+}
+
+.compliance-card small {
+  display: block;
+  margin-top: 14px;
+  color: #8b958f;
+  font-size: 0.66rem;
+  line-height: 1.6;
+}
