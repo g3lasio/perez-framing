@@ -17,6 +17,8 @@ export type AssistantCopy = {
   open: string;
   error: string;
   busy: string;
+  unavailable: string;
+  offline: string;
   disclaimer: string;
   callAction: string;
   textAction: string;
@@ -48,9 +50,11 @@ export default function AssistantChat({
   copy: AssistantCopy;
   phoneHref: string;
 }) {
-  // `widgetToken` is a build-time constant, so an unconfigured deployment resolves
-  // to "unavailable" before the first render rather than through an effect.
-  const [available, setAvailable] = useState<boolean | null>(widgetToken ? null : false);
+  // Whether Leadprime refused the token. Affects what the panel says on open —
+  // never whether the panel exists.
+  // widgetToken is a build-time constant, so an unconfigured deployment is known
+  // before the first render rather than through an effect.
+  const [rejected, setRejected] = useState(!widgetToken);
   const [config, setConfig] = useState<WidgetConfig>({});
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -64,9 +68,15 @@ export default function AssistantChat({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
-  // Ask Leadprime for the owner-managed branding up front. A 401/403 means the
-  // token was disabled or this domain is not on its allow-list — in that case the
-  // assistant is hidden rather than shown in a state where it cannot answer.
+  // Ask Leadprime for the owner-managed branding (agent name, greeting, consent).
+  //
+  // The chat is ALWAYS rendered, whatever this returns. An earlier version hid the
+  // whole widget when Leadprime answered 401/403, which meant a token that was
+  // disabled or a domain missing from the allow-list made the chat silently vanish
+  // from the site — indistinguishable from it having been removed. A rejected token
+  // is a configuration problem for the owner to fix, not a reason to take the
+  // visitor's contact channel away: the panel still opens, and it still offers a
+  // call and a text.
   useEffect(() => {
     if (!widgetToken) return;
 
@@ -77,18 +87,24 @@ export default function AssistantChat({
     })
       .then(async (response) => {
         if (response.status === 401 || response.status === 403) {
-          setAvailable(false);
+          setRejected(true);
+          // Addressed to whoever owns the site, not the visitor.
+          console.warn(
+            "[Leadprime] The widget token was rejected (%d). Check that the token is " +
+              "enabled and that this domain is on its allow-list in the Leadprime " +
+              "account. The assistant stays on the page and offers phone and text.",
+            response.status,
+          );
           return;
         }
         if (response.ok) {
           const data = (await response.json()) as WidgetConfig;
           setConfig(data ?? {});
         }
-        setAvailable(true);
       })
       .catch(() => {
-        // A transient network failure should not permanently hide the assistant.
-        if (!controller.signal.aborted) setAvailable(true);
+        // A transient network failure changes nothing: the panel still opens and the
+        // send path reports its own errors.
       });
 
     return () => controller.abort();
@@ -172,9 +188,12 @@ export default function AssistantChat({
 
   function openPanel() {
     setOpen(true);
+    if (messages.length > 0) return;
     // The greeting is the account's own, falling back to the site's copy only if
-    // Leadprime has none configured.
-    if (messages.length === 0) push("bot", config.greeting?.trim() || copy.intro);
+    // Leadprime has none configured. If the token was refused, say so plainly
+    // instead of inviting a question that cannot be answered — the call and text
+    // actions below stay available either way.
+    push("bot", rejected ? copy.unavailable : config.greeting?.trim() || copy.intro);
   }
 
   function toggle() {
@@ -186,10 +205,9 @@ export default function AssistantChat({
     if (open) inputRef.current?.focus();
   }, [open]);
 
-  if (available !== true) return null;
-
   const heading = config.agentName?.trim() || copy.title;
-  const showChips = messages.length <= 1 && !sending;
+  // Suggested questions only make sense while the agent can actually answer them.
+  const showChips = messages.length <= 1 && !sending && !rejected;
 
   return (
     <div className={`chat-widget${open ? " open" : ""}`}>
@@ -208,9 +226,9 @@ export default function AssistantChat({
             </button>
           </header>
 
-          <div className="chat-status">
+          <div className={`chat-status${rejected ? " offline" : ""}`}>
             <i />
-            {copy.status}
+            {rejected ? copy.offline : copy.status}
           </div>
 
           <div

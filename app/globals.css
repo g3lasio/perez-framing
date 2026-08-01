@@ -3099,3 +3099,7 @@ img {
     padding: 16px 15px;
   }
 }
+
+.chat-status.offline i {
+  background: #b4842f;
+}
