@@ -49,7 +49,7 @@ export function toDateInput(date: Date): string {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
-export type EstimateDateError = "invalid" | "weekday" | "too-soon";
+export type EstimateDateError = "incomplete" | "invalid" | "weekday" | "too-soon";
 
 /**
  * Returns null when the requested day is acceptable, otherwise why it is not.

@@ -3137,3 +3137,13 @@ img {
 .chat-widget.open .chat-trigger .chat-trigger-mark {
   display: none;
 }
+
+.field-error button {
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  text-decoration: underline;
+}

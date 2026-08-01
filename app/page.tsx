@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import AssistantChat from "@/components/AssistantChat";
 import Icon, { type IconName } from "@/components/Icon";
@@ -312,6 +312,9 @@ const content = {
         preferredDateWeekday: "Estimates are held on Saturdays and Sundays. Please choose a weekend day.",
         preferredDateTooSoon: "Please choose a day at least 2 days from now so we can schedule the visit.",
         preferredDateInvalid: "Please choose a valid date.",
+        preferredDateIncomplete:
+          "That date looks unfinished. Complete it, or clear it — it's optional.",
+        preferredDateClear: "Clear date",
         photos: "Photos or plans",
         photosHint: "PDF, JPG or PNG • up to 10 MB each",
         photosTooLarge: "Each file must be 10 MB or smaller. Please choose smaller files.",
@@ -661,6 +664,9 @@ const content = {
         preferredDateWeekday: "Los estimados se hacen sábado y domingo. Elige un día de fin de semana.",
         preferredDateTooSoon: "Elige un día con al menos 2 días de anticipación para poder agendar la visita.",
         preferredDateInvalid: "Elige una fecha válida.",
+        preferredDateIncomplete:
+          "Esa fecha quedó incompleta. Complétala o bórrala — el campo es opcional.",
+        preferredDateClear: "Borrar fecha",
         photos: "Fotos o planos",
         photosHint: "PDF, JPG o PNG • hasta 10 MB por archivo",
         photosTooLarge: "Cada archivo debe pesar 10 MB o menos. Elige archivos más pequeños.",
@@ -766,8 +772,8 @@ export default function Home() {
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentError, setAttachmentError] = useState<"size" | "type" | null>(null);
-  const [preferredDate, setPreferredDate] = useState("");
   const [dateError, setDateError] = useState<EstimateDateError | null>(null);
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
   const [comparePosition, setComparePosition] = useState(52);
   const [formStatus, setFormStatus] = useState<
     "idle" | "sending" | "pending" | "success" | "error"
@@ -777,7 +783,9 @@ export default function Home() {
   // left open overnight still offers valid days.
   const dateBounds = estimateDateBounds();
   const dateMessage =
-    dateError === "weekday"
+    dateError === "incomplete"
+      ? t.estimate.form.preferredDateIncomplete
+      : dateError === "weekday"
       ? t.estimate.form.preferredDateWeekday
       : dateError === "too-soon"
         ? t.estimate.form.preferredDateTooSoon
@@ -827,9 +835,21 @@ export default function Home() {
     setMobileMenuOpen(false);
   }
 
-  function handleDateChange(value: string) {
-    setPreferredDate(value);
-    setDateError(validateEstimateDate(value));
+  function handleDateChange() {
+    const input = dateInputRef.current;
+    if (!input) return;
+    // badInput means the control holds something the browser cannot parse — a
+    // half-typed date. Its value reads as empty, so this is the only signal.
+    setDateError(input.validity.badInput ? "incomplete" : validateEstimateDate(input.value));
+  }
+
+  function clearPreferredDate() {
+    const input = dateInputRef.current;
+    if (input) {
+      input.value = "";
+      input.focus();
+    }
+    setDateError(null);
   }
 
   function handleAttachmentChange(event: ChangeEvent<HTMLInputElement>) {
@@ -856,10 +876,19 @@ export default function Home() {
     const form = event.currentTarget;
     if (!form.reportValidity()) return;
 
-    const dateProblem = validateEstimateDate(preferredDate);
+    // The estimate day is optional, but a control the browser considers invalid
+    // blocks form.reportValidity() below. Left to the native path that failure is
+    // silent — no visible message, no request, and a lost lead. Surface it here in
+    // the site's own words instead.
+    const dateInput = dateInputRef.current;
+    const dateProblem: EstimateDateError | null = dateInput?.validity.badInput
+      ? "incomplete"
+      : validateEstimateDate(dateInput?.value ?? "");
+
     if (dateProblem) {
       setDateError(dateProblem);
-      form.querySelector<HTMLInputElement>('input[name="preferred_date"]')?.focus();
+      dateInput?.focus();
+      dateInput?.scrollIntoView({ block: "center", behavior: "smooth" });
       return;
     }
     if (attachmentError) return;
@@ -884,7 +913,6 @@ export default function Home() {
       form.reset();
       setAttachments([]);
       setAttachmentError(null);
-      setPreferredDate("");
       setDateError(null);
     } catch {
       setFormStatus("error");
@@ -1549,19 +1577,23 @@ export default function Home() {
                 <label className="date-field">
                   <span>{t.estimate.form.preferredDate}</span>
                   <input
+                    ref={dateInputRef}
                     name="preferred_date"
                     type="date"
-                    value={preferredDate}
                     min={dateBounds.min}
                     max={dateBounds.max}
                     aria-describedby="preferred-date-hint"
                     aria-invalid={dateError ? true : undefined}
-                    onChange={(event) => handleDateChange(event.target.value)}
+                    onChange={handleDateChange}
+                    onBlur={handleDateChange}
                   />
                   <small id="preferred-date-hint">{t.estimate.form.preferredDateHint}</small>
                   {dateError && (
                     <small className="field-error" role="alert">
-                      {dateMessage}
+                      {dateMessage}{" "}
+                      <button type="button" onClick={clearPreferredDate}>
+                        {t.estimate.form.preferredDateClear}
+                      </button>
                     </small>
                   )}
                 </label>
