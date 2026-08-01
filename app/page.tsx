@@ -3,20 +3,26 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import AssistantChat from "@/components/AssistantChat";
+import {
+  MobileActionBar,
+  SiteFooter,
+  SiteHeader,
+  SiteTopBar,
+} from "@/components/SiteChrome";
 import FramingAnatomy from "@/components/FramingAnatomy";
 import Icon, { type IconName } from "@/components/Icon";
 import { business, credentials, serviceCities } from "@/lib/site";
 import { buildBusinessSchema } from "@/lib/structuredData";
 import { captureAttribution, readAttribution } from "@/lib/attribution";
-import { cities } from "@/lib/cities";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import { useLanguage } from "@/lib/useLanguage";
+import { chrome } from "@/lib/chromeCopy";
 import {
   estimateDateBounds,
   validateEstimateDate,
   type EstimateDateError,
 } from "@/lib/scheduling";
 
-type Lang = "en" | "es";
 
 const phoneDisplay = business.phoneDisplay;
 const phoneHref = business.phoneE164;
@@ -786,40 +792,8 @@ const content = {
   },
 } as const;
 
-function LanguageToggle({
-  lang,
-  onChange,
-  compact = false,
-}: {
-  lang: Lang;
-  onChange: (lang: Lang) => void;
-  compact?: boolean;
-}) {
-  return (
-    <div className={`language-toggle${compact ? " compact" : ""}`} aria-label="Language selector">
-      <button
-        type="button"
-        className={lang === "en" ? "active" : ""}
-        aria-pressed={lang === "en"}
-        onClick={() => onChange("en")}
-      >
-        EN
-      </button>
-      <button
-        type="button"
-        className={lang === "es" ? "active" : ""}
-        aria-pressed={lang === "es"}
-        onClick={() => onChange("es")}
-      >
-        ES
-      </button>
-    </div>
-  );
-}
-
 export default function Home() {
-  const [lang, setLang] = useState<Lang>("es");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { lang, changeLanguage } = useLanguage();
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentError, setAttachmentError] = useState<"size" | "type" | null>(null);
@@ -847,17 +821,7 @@ export default function Home() {
       ? t.estimate.form.photosTooLarge
       : t.estimate.form.photosWrongType;
 
-  useEffect(() => {
-    const savedLanguage = window.localStorage.getItem("rfs-language");
-    if (savedLanguage === "en" || savedLanguage === "es") {
-      const timer = window.setTimeout(() => setLang(savedLanguage), 0);
-      return () => window.clearTimeout(timer);
-    }
-  }, []);
 
-  useEffect(() => {
-    document.documentElement.lang = lang;
-  }, [lang]);
 
   // Campaign data lives on the landing URL, which is rarely the URL the visitor is
   // on when they submit. Record it on arrival so Leadprime can attribute the lead;
@@ -881,11 +845,6 @@ export default function Home() {
 
   const schema = useMemo(() => buildBusinessSchema(), []);
 
-  function changeLanguage(next: Lang) {
-    setLang(next);
-    window.localStorage.setItem("rfs-language", next);
-    setMobileMenuOpen(false);
-  }
 
   function handleDateChange() {
     const input = dateInputRef.current;
@@ -991,90 +950,8 @@ export default function Home() {
       </a>
 
       <div className="site-shell">
-        <div className="topbar">
-          <div className="container topbar-inner">
-            <div className="topbar-left">
-              <span>
-                <Icon name="map" size={15} />
-                {t.topbar.service}
-              </span>
-              <span className="topbar-divider" aria-hidden="true" />
-              <span>{t.topbar.spanish}</span>
-            </div>
-            <a
-              className="topbar-license"
-              href="https://www.cslb.ca.gov/OnlineServices/CheckLicenseII/LicenseDetail.aspx?LicNum=1144949"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Icon name="shield" size={15} />
-              {t.topbar.license}
-            </a>
-          </div>
-        </div>
-
-        <header className="site-header">
-          <div className="container header-inner">
-            <a className="brand" href="#main" aria-label="Perez Rough Framing home">
-              <Image src="/assets/logo-mark.png" alt="" width={72} height={72} />
-              <span>
-                <strong>PEREZ</strong>
-                <small>ROUGH FRAMING</small>
-              </span>
-            </a>
-
-            <nav className="desktop-nav" aria-label="Main navigation">
-              <a href="#work">{t.nav.work}</a>
-              <a href="#services">{t.nav.services}</a>
-              <a href="#builders">{t.nav.builders}</a>
-              <a href="#process">{t.nav.process}</a>
-              <a href="#about">{t.nav.about}</a>
-            </nav>
-
-            <div className="header-actions">
-              <LanguageToggle lang={lang} onChange={changeLanguage} />
-              <a className="button button-small button-copper" href="#estimate">
-                {t.nav.estimate}
-                <Icon name="arrow" size={17} />
-              </a>
-              <button
-                className="menu-button"
-                type="button"
-                aria-label={t.nav.menu}
-                aria-expanded={mobileMenuOpen}
-                onClick={() => setMobileMenuOpen((value) => !value)}
-              >
-                <Icon name={mobileMenuOpen ? "close" : "menu"} size={24} />
-              </button>
-            </div>
-          </div>
-
-          {mobileMenuOpen && (
-            <nav className="mobile-menu" aria-label="Mobile navigation">
-              <div className="container">
-                <a href="#work" onClick={() => setMobileMenuOpen(false)}>
-                  {t.nav.work}
-                </a>
-                <a href="#services" onClick={() => setMobileMenuOpen(false)}>
-                  {t.nav.services}
-                </a>
-                <a href="#builders" onClick={() => setMobileMenuOpen(false)}>
-                  {t.nav.builders}
-                </a>
-                <a href="#process" onClick={() => setMobileMenuOpen(false)}>
-                  {t.nav.process}
-                </a>
-                <a href="#about" onClick={() => setMobileMenuOpen(false)}>
-                  {t.nav.about}
-                </a>
-                <a href="#estimate" onClick={() => setMobileMenuOpen(false)}>
-                  {t.nav.estimate}
-                </a>
-                <LanguageToggle compact lang={lang} onChange={changeLanguage} />
-              </div>
-            </nav>
-          )}
-        </header>
+        <SiteTopBar lang={lang} />
+        <SiteHeader lang={lang} onChangeLang={changeLanguage} />
 
         <main id="main">
           <section className="hero">
@@ -1753,46 +1630,7 @@ export default function Home() {
           </section>
         </main>
 
-        <footer className="footer">
-          <div className="container footer-grid">
-            <div className="footer-brand">
-              <Image src="/assets/logo-mark.png" alt="" width={104} height={104} />
-              <div>
-                <strong>PEREZ</strong>
-                <span>ROUGH FRAMING</span>
-                <p>{t.footer.body}</p>
-              </div>
-            </div>
-            <div>
-              <h2>{t.footer.contact}</h2>
-              <a href={`tel:${phoneHref}`}>{phoneDisplay}</a>
-              <a href={`mailto:${email}`}>{email}</a>
-              <span>{t.footer.location}</span>
-            </div>
-            <div>
-              <h2>{t.footer.links}</h2>
-              <a href="#work">{t.nav.work}</a>
-              <a href="#services">{t.nav.services}</a>
-              <a href="#builders">{t.nav.builders}</a>
-              <a href="#process">{t.nav.process}</a>
-              <a href="#estimate">{t.nav.estimate}</a>
-              <a href="/company-profile">{t.footer.profile}</a>
-              <a href="/privacy">{t.footer.privacy}</a>
-            </div>
-            <div>
-              <h2>{t.footer.areas}</h2>
-              {cities.map((city) => (
-                <a key={city.slug} href={`/framing/${city.slug}`}>
-                  {lang === "es" ? `Framing en ${city.name}` : `Framing in ${city.name}`}
-                </a>
-              ))}
-            </div>
-          </div>
-          <div className="container footer-bottom">
-            <span>© {new Date().getFullYear()} Perez Rough Framing. {t.footer.rights}</span>
-            <span>{t.footer.ownership}</span>
-          </div>
-        </footer>
+        <SiteFooter lang={lang} />
 
         {selectedProject !== null && (
           <div
@@ -1824,22 +1662,9 @@ export default function Home() {
           </div>
         )}
 
-        <AssistantChat lang={lang} copy={t.chat} phoneHref={phoneHref} />
+        <AssistantChat lang={lang} copy={chrome[lang].chat} phoneHref={phoneHref} />
 
-        <nav className="mobile-action-bar" aria-label="Quick contact">
-          <a href={`tel:${phoneHref}`}>
-            <Icon name="phone" size={19} />
-            {t.mobile.call}
-          </a>
-          <a href={`sms:${phoneHref}`}>
-            <Icon name="message" size={19} />
-            {t.mobile.text}
-          </a>
-          <a href="#estimate">
-            <Icon name="ruler" size={19} />
-            {t.mobile.quote}
-          </a>
-        </nav>
+        <MobileActionBar lang={lang} />
       </div>
     </>
   );

@@ -3521,3 +3521,224 @@ img {
   font-size: 0.66rem;
   line-height: 1.6;
 }
+
+/* ── City landing pages ──────────────────────────────────────────────────── */
+
+.city-hero {
+  position: relative;
+  background: var(--ink);
+  color: var(--white);
+  overflow: hidden;
+  padding: 58px 0 66px;
+}
+
+.city-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.66fr);
+  gap: 52px;
+  align-items: center;
+}
+
+.city-hero h1 {
+  margin: 12px 0 0;
+  font-size: clamp(2.6rem, 5.4vw, 4.4rem);
+  font-weight: 850;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+}
+
+.city-hero h1 span {
+  display: block;
+  color: var(--copper);
+}
+
+.city-hero .hero-body {
+  margin: 20px 0 0;
+  max-width: 52ch;
+  color: #b7c0bb;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.city-hero-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.city-hero-facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #d3dad6;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.city-hero-facts svg {
+  color: var(--copper);
+}
+
+.city-hero .hero-actions {
+  margin-top: 30px;
+}
+
+.city-hero-visual .hero-image-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+.city-hero-visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.city-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.82fr);
+  gap: 48px;
+  align-items: center;
+}
+
+.city-prose {
+  margin: 16px 0 0;
+  max-width: 60ch;
+  color: #4f5853;
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+
+.city-split-visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 3px;
+}
+
+.city-scope-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-top: 34px;
+}
+
+.city-scope-grid article {
+  border: 1px solid #e0d9cd;
+  border-top: 3px solid var(--copper);
+  background: var(--white);
+  padding: 22px 20px 24px;
+}
+
+.city-scope-grid span {
+  color: var(--copper);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+}
+
+.city-scope-grid h3 {
+  margin: 10px 0 0;
+  font-size: 1.02rem;
+  line-height: 1.3;
+}
+
+.city-cta {
+  background: #f3efe7;
+}
+
+.city-cta-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 26px;
+}
+
+.city-cta-inner p {
+  margin: 12px 0 0;
+  max-width: 46ch;
+  color: #4f5853;
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.city-cta .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* The ghost button lives on dark backgrounds elsewhere; on these light bands it
+   needs its own treatment or it renders white-on-cream and disappears. */
+.city-cta .button-ghost,
+.city-actions .button-ghost {
+  border: 1px solid #cfc6b8;
+  color: var(--ink);
+}
+
+.city-cta .button-ghost:hover,
+.city-actions .button-ghost:hover {
+  border-color: var(--copper);
+  color: var(--copper-deep);
+}
+
+.city-others-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.city-others-grid a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  border: 1px solid #e0d9cd;
+  background: var(--white);
+  padding: 17px 18px;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.city-others-grid a:hover {
+  border-color: var(--copper);
+  transform: translateY(-2px);
+}
+
+.city-others-grid strong {
+  flex: 1 0 100%;
+  font-size: 0.98rem;
+}
+
+.city-others-grid small {
+  flex: 1;
+  color: #7d837f;
+  font-size: 0.68rem;
+}
+
+.city-others-grid svg {
+  color: var(--copper);
+}
+
+@media (max-width: 900px) {
+  .city-hero-grid,
+  .city-split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 30px;
+  }
+
+  .city-hero-visual {
+    order: -1;
+  }
+
+  .city-cta-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
