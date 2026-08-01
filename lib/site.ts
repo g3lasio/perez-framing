@@ -5,17 +5,16 @@
  * one edit, not a hunt through components.
  */
 
+// Resolved and inlined at build time by next.config.ts, which prefers an explicit
+// NEXT_PUBLIC_SITE_URL, falls back to Railway's own public domain for this service,
+// and fails the build if neither is available. There is no hardcoded default: a
+// wrong canonical is what kept this site out of Google.
 const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
 if (!configuredSiteUrl) {
-  // Deliberately fatal. A silent fallback is what previously shipped canonical,
-  // og:url and og:image pointing at a prototype domain, which tells Google the
-  // authoritative copy lives somewhere else and keeps this site out of the index.
   throw new Error(
-    "NEXT_PUBLIC_SITE_URL is not set. Set it to the canonical production origin " +
-      "(for example https://perezroughframing.com) in the deployment environment, " +
-      "or in .env.local for local development. The build fails without it on purpose: " +
-      "canonical, og:url, og:image and twitter:image are all derived from it.",
+    "NEXT_PUBLIC_SITE_URL is empty at runtime. It is normally inlined by " +
+      "next.config.ts at build time — see resolveSiteUrl() there.",
   );
 }
 
