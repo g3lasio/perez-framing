@@ -21,24 +21,35 @@ function resolveSiteUrl(): string {
 
   // Railway exposes these to the build. RAILWAY_PUBLIC_DOMAIN is the current name;
   // RAILWAY_STATIC_URL is the older one and may already include the scheme.
-  const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN?.trim();
-  if (railwayDomain) {
-    return `https://${railwayDomain.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
-  }
+  const fromRailway =
+    process.env.RAILWAY_PUBLIC_DOMAIN?.trim() || process.env.RAILWAY_STATIC_URL?.trim();
 
-  const railwayStatic = process.env.RAILWAY_STATIC_URL?.trim();
-  if (railwayStatic) {
-    return `https://${railwayStatic.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
+  if (fromRailway) {
+    const derived = `https://${fromRailway.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
+    // Loud on purpose. Railway reports whichever domain is attached to the service,
+    // which is not necessarily the canonical one — a staging or legacy custom domain
+    // reports just the same. Adopting it silently is how canonical, og:url, the
+    // sitemap and the JSON-LD all ended up pointing at a host that 404s, which tells
+    // Google the authoritative copy lives somewhere dead. The deploy still succeeds,
+    // but the wrong value is now visible in the build log instead of invisible.
+    console.warn(
+      [
+        "",
+        "  ⚠  NEXT_PUBLIC_SITE_URL is not set.",
+        `     Falling back to the domain Railway reports: ${derived}`,
+        "     canonical, og:url, og:image, robots.txt, sitemap.xml and the JSON-LD",
+        "     are all being built from that value. If it is not the canonical public",
+        "     domain, set NEXT_PUBLIC_SITE_URL and redeploy.",
+        "",
+      ].join("\n"),
+    );
+    return derived;
   }
 
   throw new Error(
     "Cannot determine the canonical site URL.\n" +
-      "Set NEXT_PUBLIC_SITE_URL to the production origin (for example " +
-      "https://perezroughframing.com) in the deployment environment, or in " +
-      ".env.local for local development.\n" +
-      "On Railway this is normally derived from RAILWAY_PUBLIC_DOMAIN " +
-      "automatically; set NEXT_PUBLIC_SITE_URL explicitly once the custom domain " +
-      "is connected.\n" +
+      "Set NEXT_PUBLIC_SITE_URL to the production origin in the deployment " +
+      "environment, or in .env.local for local development.\n" +
       "There is no default on purpose: canonical, og:url, og:image and " +
       "twitter:image are all derived from this value, and a wrong one keeps the " +
       "site out of Google.",

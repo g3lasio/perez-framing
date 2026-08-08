@@ -14,9 +14,23 @@
 Add:
 
 ```text
-NEXT_PUBLIC_SITE_URL=https://your-final-domain.com
+NEXT_PUBLIC_SITE_URL=https://perezroughframing.com
 LEADPRIME_WEBHOOK_URL=https://leadprime.chyrris.com/api/leads/webhook/<key>
 ```
+
+`NEXT_PUBLIC_SITE_URL` must be the canonical apex, with no trailing slash and no
+`www`. Every absolute URL the site emits is derived from it. If it is unset the
+build falls back to whatever domain Railway reports and prints a warning naming
+that value — check the build log if canonical ever looks wrong.
+
+## Domains
+
+- Apex `perezroughframing.com` is canonical and is what `NEXT_PUBLIC_SITE_URL` holds.
+- `www` must exist in DNS as a CNAME to the Railway target and be added as a
+  custom domain in Railway, or it resolves to nothing. Once it reaches the app,
+  `proxy.ts` answers it with a 301 to the apex, path and query preserved.
+- Keep the Cloudflare proxy grey (DNS only) until Railway issues the certificate.
+  After that, if the proxy is enabled, SSL must be Full (strict).
 
 `LEADPRIME_WEBHOOK_URL` is required for the estimate form to deliver leads. It is
 deliberately not in the repository: this repo is public and the webhook is an

@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     description:
       "Licencia CSLB #1144949 Clase B, seguro y workers' compensation vigentes, equipo de 11 personas, cobertura en el Área de la Bahía.",
     url: "/company-profile",
+    images: ["/assets/project-01.jpg"],
   },
 };
 

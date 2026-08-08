@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     title: "Aviso de privacidad | Perez Rough Framing",
     description: "Cómo Perez Rough Framing maneja solicitudes de estimado y datos de contacto.",
     url: "/privacy",
+    images: ["/assets/project-05.jpg"],
   },
 };
 

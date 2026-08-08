@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CityLanding from "@/components/CityLanding";
 import { business } from "@/lib/site";
-import { cities, cityBySlug } from "@/lib/cities";
+import { cities, cityBySlug, cityPhoto } from "@/lib/cities";
 import { buildBusinessSchema } from "@/lib/structuredData";
 
 type Params = { city: string };
@@ -30,11 +30,16 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: `/framing/${city.slug}` },
+    // Declaring openGraph on a page replaces the layout's block wholesale, images
+    // included — so every one of these has to name its own or the page shares with
+    // no preview at all. Each city uses the photo it actually shows in its hero.
     openGraph: {
       title: `${title} | ${business.publicName}`,
       description,
       url: `/framing/${city.slug}`,
+      images: [cityPhoto(city)],
     },
+    twitter: { card: "summary_large_image", title, description, images: [cityPhoto(city)] },
   };
 }
 

@@ -9,6 +9,7 @@ import { business, credentials, scheduling } from "@/lib/site";
 import { chrome } from "@/lib/chromeCopy";
 import { useLanguage } from "@/lib/useLanguage";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import { cityPhoto, cityPhotos } from "@/lib/cities";
 import type { City } from "@/lib/cities";
 
 const copy = {
@@ -80,16 +81,6 @@ const copy = {
   },
 };
 
-/** Rotates the project photos so neighbouring city pages do not look identical. */
-const PHOTOS = [
-  "/assets/project-05.jpg",
-  "/assets/project-02.jpg",
-  "/assets/project-04.jpg",
-  "/assets/project-03.jpg",
-  "/assets/project-06.jpg",
-  "/assets/project-01.jpg",
-];
-
 export default function CityLanding({ city, others }: { city: City; others: City[] }) {
   const { lang, changeLanguage } = useLanguage();
   useScrollReveal();
@@ -97,8 +88,8 @@ export default function CityLanding({ city, others }: { city: City; others: City
   const t = copy[lang];
   const local = city[lang];
   const nav = chrome[lang];
-  const hero = PHOTOS[(city.priority - 1) % PHOTOS.length];
-  const support = PHOTOS[city.priority % PHOTOS.length];
+  const hero = cityPhoto(city);
+  const support = cityPhotos[city.priority % cityPhotos.length];
 
   return (
     <div className="site-shell">

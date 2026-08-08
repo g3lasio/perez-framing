@@ -336,6 +336,24 @@ export const cities: City[] = [
   },
 ];
 
+/**
+ * Photos, in the same rotation the city landing pages use for their hero.
+ * Exported so page metadata can name the same image the visitor will see, instead
+ * of every share of every city falling back to one generic photo.
+ */
+export const cityPhotos = [
+  "/assets/project-05.jpg",
+  "/assets/project-02.jpg",
+  "/assets/project-04.jpg",
+  "/assets/project-03.jpg",
+  "/assets/project-06.jpg",
+  "/assets/project-01.jpg",
+] as const;
+
+export function cityPhoto(city: City): string {
+  return cityPhotos[(city.priority - 1) % cityPhotos.length];
+}
+
 export function cityBySlug(slug: string): City | undefined {
   return cities.find((city) => city.slug === slug);
 }

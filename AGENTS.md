@@ -61,9 +61,19 @@ Rules that still hold:
 - Do not add a local fallback bot. If Leadprime rejects the token or is unreachable, the assistant hides itself or points the visitor at phone and text — it never answers on its own.
 - Never show a success state for a submission that was not delivered.
 
+## The domain rule
+
+The canonical origin lives in `NEXT_PUBLIC_SITE_URL` and nowhere else. Never write an absolute URL of this site's own domain into the code — not in metadata, not in JSON-LD, not in a sitemap, not in a comment that someone might copy.
+
+Everything absolute is derived: canonical, `og:url`, `og:image`, `twitter:image`, `robots.txt` Host and Sitemap, sitemap `<loc>`, the JSON-LD `@id`/`url`/`image`/`logo`, and the `www` redirect in `proxy.ts`.
+
+The test that this holds: changing domains is one environment variable edit and a redeploy, with zero code changes. If a domain change would need a second edit, it is not done.
+
+A prototype domain was once left in the code. Canonical pointed Google at a host that 404s, so the site did not index and every shared link previewed without an image. That is the failure this rule exists to prevent.
+
 ## Deployment
 
-Target hosting is Railway. Keep `npm run build` and `npm run start` working. Do not reintroduce Cloudflare Sites/Vinext files unless the hosting decision changes. The final domain is not yet confirmed; canonical URLs use `NEXT_PUBLIC_SITE_URL`.
+Target hosting is Railway. Keep `npm run build` and `npm run start` working. Do not reintroduce Cloudflare Sites/Vinext files unless the hosting decision changes. The canonical domain is `perezroughframing.com`, held in `NEXT_PUBLIC_SITE_URL` — see the domain rule above.
 
 ## Completion gate
 
